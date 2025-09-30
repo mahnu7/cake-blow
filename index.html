@@ -2,166 +2,179 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Happy Birthday Sawaiz 🎂</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: "Comic Sans MS", cursive, sans-serif;
+      height: 100vh;
+      background: linear-gradient(135deg, #3f2b96, #a8c0ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: white;
       text-align: center;
-      background: linear-gradient(to top right, #ffdde1, #ee9ca7);
-      overflow: hidden;
     }
 
     h1 {
-      font-size: 2.5rem;
-      margin-top: 30px;
-      color: #fff;
-      text-shadow: 2px 2px 5px #ff4081;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
     }
 
     .cake {
       position: relative;
-      margin: 50px auto;
-      width: 500px;
-      height: 200px;
-      background: #ffb347;
-      border-radius: 0 0 30px 30px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .frosting {
-      position: absolute;
-      top: -40px;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: #fff;
-      border-radius: 50% 50% 0 0;
+      width: 300px;
+      height: 150px;
+      background: radial-gradient(circle at center, #6a0dad, #4b0082);
+      border-radius: 50% / 20%;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding-top: 20px;
     }
 
     .candle {
-      position: absolute;
-      bottom: 160px;
-      width: 10px;
-      height: 50px;
-      background: #ff4d6d;
-      border-radius: 5px;
+      position: relative;
+      width: 6px;
+      height: 40px;
+      background: sienna;
+      margin: 0 5px;
+      display: flex;
+      justify-content: center;
     }
 
     .flame {
       position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 12px;
-      height: 18px;
-      background: radial-gradient(circle, #ffeb3b, #ff9800);
+      top: -12px;
+      width: 10px;
+      height: 15px;
+      background: radial-gradient(circle, gold, orange, red);
       border-radius: 50%;
       animation: flicker 0.2s infinite alternate;
     }
 
     @keyframes flicker {
-      from { transform: translateX(-50%) scale(1); }
-      to { transform: translateX(-50%) scale(1.2); }
+      from { transform: scale(1) translateY(0); opacity: 0.9; }
+      to   { transform: scale(1.2) translateY(-2px); opacity: 0.7; }
     }
 
-    .message {
-      margin-top: 30px;
-      font-size: 1.3rem;
-      color: #fff;
-      font-weight: bold;
+    .hidden {
+      display: none;
     }
 
-    .hearts {
-      margin-top: 20px;
-      font-size: 2rem;
-      color: red;
-    }
-
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 20px;
-      background: #ff4081;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-
-    button:hover {
-      background: #e91e63;
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <h1>🎉 Happy Birthday, Sawaiz 🎉</h1>
-
-  <div class="cake" id="cake">
-    <div class="frosting"></div>
-  </div>
-
-  <button onclick="blowCandles()">Blow Candles 🎂</button>
-
-  <div class="message">
-    With all my love from ❤️ Hyderabad to Lahore ❤️<br>
-    May your 27th year be as sweet as this cake 🎂
-  </div>
-
-  <div class="hearts">💌 💖 💌</div>
+  <h1 id="message">Sending you my love all the way Hyderabad to Lahore. Make a wish.</h1>
+  <div class="cake" id="cake"></div>
+  <canvas id="confetti"></canvas>
 
   <script>
-    // Add candles dynamically
-    const candleCount = 27; // 🕯️ Number of candles
     const cake = document.getElementById("cake");
+    const message = document.getElementById("message");
+    const confettiCanvas = document.getElementById("confetti");
+    const ctx = confettiCanvas.getContext("2d");
 
-    for (let i = 0; i < candleCount; i++) {
+    let numCandles = 27; // 🎂 Change this number if needed
+    let flamesOut = 0;
+
+    // Add candles dynamically
+    for (let i = 0; i < numCandles; i++) {
       const candle = document.createElement("div");
-      candle.className = "candle";
-      candle.style.left = `${10 + i * (480 / candleCount)}px`;
+      candle.classList.add("candle");
 
       const flame = document.createElement("div");
-      flame.className = "flame";
+      flame.classList.add("flame");
 
       candle.appendChild(flame);
       cake.appendChild(candle);
     }
 
-    // Function to blow candles
-    function blowCandles() {
-      const flames = document.querySelectorAll(".flame");
-      flames.forEach(flame => flame.style.display = "none");
-      alert("🎉 You blew out the candles, Happy Birthday Sawaiz! 🎂💖");
-    }
+    // Microphone detection
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        source.connect(analyser);
 
-    // Confetti 🎉
-    function createConfetti() {
-      const confetti = document.createElement("div");
-      confetti.innerText = "🎉";
-      confetti.style.position = "absolute";
-      confetti.style.left = Math.random() * window.innerWidth + "px";
-      confetti.style.top = "-20px";
-      confetti.style.fontSize = "24px";
-      confetti.style.animation = "fall 3s linear forwards";
-      document.body.appendChild(confetti);
+        const dataArray = new Uint8Array(analyser.fftSize);
 
-      setTimeout(() => confetti.remove(), 3000);
-    }
+        function detectBlow() {
+          analyser.getByteFrequencyData(dataArray);
+          let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-    setInterval(createConfetti, 300);
+          if (volume > 30) { // adjust sensitivity
+            blowOutCandle();
+          }
 
-    const style = document.createElement("style");
-    style.innerHTML = `
-      @keyframes fall {
-        to {
-          transform: translateY(${window.innerHeight + 100}px);
+          requestAnimationFrame(detectBlow);
+        }
+
+        detectBlow();
+      });
+
+    function blowOutCandle() {
+      const flames = document.querySelectorAll(".flame:not(.hidden)");
+      if (flames.length > 0) {
+        flames[0].classList.add("hidden");
+        flamesOut++;
+
+        if (flamesOut === numCandles) {
+          showConfetti();
+          message.innerText = "May your 27th be as special as this cake <3";
         }
       }
-    `;
-    document.head.appendChild(style);
+    }
+
+    // Simple confetti
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    let confettiPieces = [];
+
+    function showConfetti() {
+      for (let i = 0; i < 200; i++) {
+        confettiPieces.push({
+          x: Math.random() * confettiCanvas.width,
+          y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * 20 + 10,
+          color: `hsl(${Math.random() * 360},100%,50%)`,
+          tilt: Math.random() * 10 - 10
+        });
+      }
+      drawConfetti();
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiPieces.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.r, p.r);
+        ctx.fill();
+        p.y += p.d * 0.05;
+        p.x += Math.sin(p.tilt);
+        if (p.y > confettiCanvas.height) {
+          p.y = -10;
+          p.x = Math.random() * confettiCanvas.width;
+        }
+      });
+      requestAnimationFrame(drawConfetti);
+    }
   </script>
 </body>
 </html>
+
