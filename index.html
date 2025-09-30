@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Birthday Sawaiz 🎂</title>
+<style>
+  :root{
+    --bg1: linear-gradient(180deg,#fff8fb,#fff3ea);
+    --card:#fff;
+    --accent:#ff5a8f;
+    --cake:#ffd7b8;
+    --frost:#fff1f0;
+    --shadow: rgba(10,10,10,0.08);
+    --text:#2b2b2b;
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  body{display:flex;align-items:center;justify-content:center;background:var(--bg1);color:var(--text);padding:24px}
+  .wrap{max-width:900px;width:100%;background:var(--card);border-radius:16px;padding:28px;box-shadow:0 10px 30px var(--shadow);text-align:center}
+  h1{margin:0;font-size:30px}
+  p.lead{margin:8px 0 20px;color:#575050}
+  .stage{display:flex;justify-content:center;gap:28px;align-items:flex-end;flex-wrap:wrap}
+  /* cake */
+  .cake{position:relative;width:320px;min-height:220px}
+  .plate{position:absolute;left:50%;transform:translateX(-50%);bottom:-18px;width:420px;height:36px;border-radius:50px;background:linear-gradient(180deg,#f0f0f0,#e6e6e6);box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  .tier{position:absolute;left:50%;transform:translateX(-50%);border-radius:14px;box-shadow:0 10px 22px rgba(11,8,8,0.06)}
+  .tier.bottom{bottom:0;width:260px;height:110px;background:var(--cake)}
+  .tier.middle{bottom:80px;width:180px;height:82px;background:var(--cake)}
+  .frost{position:absolute;left:50%;transform:translateX(-50%);width:270px;height:34px;bottom:94px;background:var(--frost);border-radius:12px 12px 30px 30px;box-shadow:inset 0 -6px 8px rgba(0,0,0,0.03)}
+  /* candles */
+  .candles{position:absolute;left:50%;transform:translateX(-50%);bottom:170px;display:flex;gap:18px}
+  .candle{width:14px;height:44px;border-radius:6px;background:linear-gradient(180deg,#fff,#ffdede);position:relative;display:flex;align-items:flex-start;justify-content:center}
+  .wick{position:absolute;top:6px;width:2px;height:8px;background:#222;border-radius:2px}
+  .flame{position:absolute;top:-18px;width:14px;height:22px;border-radius:40% 40% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 40% 30%,#ffff9a,#ffcd33 40%,#ff7300 80%);box-shadow:0 6px 10px rgba(255,120,0,0.15);animation:flicker 140ms infinite alternate}
+  @keyframes flicker{from{transform:scale(1) rotate(-2deg)}to{transform:scale(1.14) rotate(4deg)}}
+  /* extinguished */
+  .flame.out{animation:none;transform:scale(0.1);opacity:0;transition:all 700ms ease}
+  .smoke{position:absolute;top:-12px;width:14px;height:14px;border-radius:50%;background:linear-gradient(180deg,rgba(120,120,120,0.12),rgba(120,120,120,0));opacity:0;transform:translateY(0);pointer-events:none}
+  .smoke.show{animation:rise 1600ms ease forwards}
+  @keyframes rise{from{opacity:0;transform:translateY(0) scale(0.8)}50%{opacity:0.7}to{opacity:0;transform:translateY(-80px) scale(1.6)}}
+  /* controls */
+  .controls{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  button{background:var(--accent);border:none;color:white;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer}
+  .ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+  .status{display:inline-block;margin-left:8px;font-size:13px;color:#444}
+  /* success message */
+  .msg{margin-top:18px;font-size:18px;padding:12px 14px;border-radius:10px;display:inline-block;background:linear-gradient(90deg,#fff6fb,#fff6ea);box-shadow:0 8px 18px rgba(0,0,0,0.04)}
+  .hidden{display:none}
+  /* confetti canvas full */
+  #confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:999}
+  /* small responsive */
+  @media (max-width:540px){.cake{width:260px}.candles{gap:12px;bottom:155px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Happy Birthday, <span id="nameInline">Sawaiz</span> 🎂</h1>
+    <p class="lead">I love you — blow out the candles from wherever you are. ❤️</p>
+
+    <div class="stage">
+      <div class="cake" id="cake">
+        <div class="tier bottom"></div>
+        <div class="frost"></div>
+        <div class="tier middle"></div>
+
+        <div class="candles" id="candles">
+          <!-- JS will render candles here -->
+        </div>
+
+        <div class="plate"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="blowBtn">Blow the Candles (Click)</button>
+      <button id="micBtn" class="ghost">Use Microphone (Blow)</button>
+      <span class="status" id="micStatus">Mic: off</span>
+    </div>
+
+    <div id="message" class="msg hidden">✨ You blew out the candles! Happy Birthday, Sawaiz! ✨</div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+<script>
+/* ------------- configuration ------------- */
+const PERSON = "Sawaiz";            // change name here if you want
+const CANDLE_COUNT = 3;            // number of candles (edit)
+const MIC_CALIBRATE_MS = 1400;     // time to sample ambient noise
+/* ------------- render candles ------------- */
+const candlesEl = document.getElementById('candles');
+for(let i=0;i<CANDLE_COUNT;i++){
+  const c = document.createElement('div');
+  c.className = 'candle';
+  c.innerHTML = '<div class="wick"></div><div class="flame"></div><div class="smoke"></div>';
+  candlesEl.appendChild(c);
+}
+document.getElementById('nameInline').innerText = PERSON;
+
+/* ------------- blow logic ------------- */
+let blown = false;
+function blow() {
+  if (blown) return;
+  blown = true;
+  document.querySelectorAll('.flame').forEach(f=>{
+    f.classList.add('out');
+    const smoke = f.parentElement.querySelector('.smoke');
+    setTimeout(()=>smoke.classList.add('show'), 250);
+  });
+  document.getElementById('message').classList.remove('hidden');
+  startConfetti();
+}
+
+/* Click button */
+document.getElementById('blowBtn').addEventListener('click', ()=> {
+  blow();
+});
+
+/* ------------- microphone blow detection ------------- */
+const micBtn = document.getElementById('micBtn');
+const micStatus = document.getElementById('micStatus');
+let audioCtx, analyser, sourceNode, rafId;
+let baseline = 0;
+let listening = false;
+
+micBtn.addEventListener('click', async ()=>{
+  if (listening) { stopMic(); return; }
+  // start mic
+  try {
+    micStatus.innerText = 'Mic: requesting...';
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    sourceNode.connect(analyser);
+    // calibrate ambient noise
+    micStatus.innerText = 'Mic: calibrating...';
+    baseline = await calibrateBaseline();
+    micStatus.innerText = 'Mic: listening (blow now)';
+    listening = true;
+    micBtn.innerText = 'Stop Microphone';
+    micBtn.classList.remove('ghost');
+    monitorMic();
+  } catch(err) {
+    micStatus.innerText = 'Mic: permission denied / not available';
+    console.warn(err);
+  }
+});
+
+function stopMic(){
+  if (rafId) cancelAnimationFrame(rafId);
+  if (sourceNode && sourceNode.mediaStream) {
+    const tracks = sourceNode.mediaStream.getTracks();
+    tracks.forEach(t=>t.stop());
+  }
+  if (audioCtx) audioCtx.close();
+  micStatus.innerText = 'Mic: off';
+  micBtn.innerText = 'Use Microphone (Blow)';
+  micBtn.classList.add('ghost');
+  listening = false;
+}
+
+/* compute baseline RMS */
+function calibrateBaseline(){
+  return new Promise((resolve)=>{
+    const arr = new Float32Array(analyser.fftSize);
+    const samples = [];
+    const start = performance.now();
+    function sample(){
+      analyser.getFloatTimeDomainData(arr);
+      let sum = 0;
+      for (let i=0;i<arr.length;i++){ sum += arr[i]*arr[i]; }
+      const rms = Math.sqrt(sum / arr.length);
+      samples.push(rms);
+      if (performance.now() - start < MIC_CALIBRATE_MS) {
+        requestAnimationFrame(sample);
+      } else {
+        // median-ish baseline
+        samples.sort((a,b)=>a-b);
+        const med = samples[Math.floor(samples.length/2)] || 0.0001;
+        resolve(med);
+      }
+    }
+    sample();
+  });
+}
+
+/* monitor for blow: quick loud burst above threshold */
+function monitorMic(){
+  const data = new Float32Array(analyser.fftSize);
+  function loop(){
+    analyser.getFloatTimeDomainData(data);
+    let sum = 0;
+    for (let i=0;i<data.length;i++) sum += data[i]*data[i];
+    const rms = Math.sqrt(sum / data.length);
+    // threshold: a bit above baseline
+    const THRESH = Math.max(0.02, baseline * 5 + 0.01);
+    if (!blown && rms > THRESH) {
+      blow();
+      stopMic();
+      return;
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+/* ------------- confetti (simple) ------------- */
+const confCanvas = document.getElementById('confetti');
+const ctx = confCanvas.getContext('2d');
+let W = confCanvas.width = window.innerWidth;
+let H = confCanvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{W=confCanvas.width=window.innerWidth;H=confCanvas.height=window.innerHeight;});
+
+let particles = [];
+function startConfetti(){
+  for(let i=0;i<160;i++){
+    particles.push({
+      x: Math.random()*W,
+      y: -Math.random()*H,
+      r: 6+Math.random()*8,
+      d: Math.random()*40+6,
+      color: ['#ff5a8f','#ffd166','#8fd3ff','#a6ffb0'][Math.floor(Math.random()*4)],
+      tilt: Math.random()*10,
+      tiltAngleIncrement: Math.random()*0.07+0.05
+    });
+  }
+  confettiLoop();
+  setTimeout(()=>{particles=[]; ctx.clearRect(0,0,W,H);}, 4000);
+}
+let confettiRAF;
+function confettiLoop(){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<particles.length;i++){
+    const p = particles[i];
+    p.tilt += p.tiltAngleIncrement;
+    p.x += Math.sin(p.tilt) * 0.7;
+    p.y += 2 + p.d/30;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y, p.r, p.r/2, p.tilt, 0, Math.PI*2);
+    ctx.fill();
+  }
+  confettiRAF = requestAnimationFrame(confettiLoop);
+}
+
+/* stop confetti after some time */
+setInterval(()=>{ if (particles.length===0 && confettiRAF) cancelAnimationFrame(confettiRAF); }, 1000);
+
+/* ------------- safety: if mic not supported (fallback) ------------- */
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  micBtn.disabled = true;
+  micStatus.innerText = 'Mic: not supported on this browser';
+}
+
+/* ------------- helpful quick keyboard: space to blow ------------- */
+window.addEventListener('keydown', e=>{ if (e.code==='Space'){ e.preventDefault(); blow(); }});
+</script>
+</body>
+</html>
