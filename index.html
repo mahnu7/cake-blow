@@ -2,177 +2,148 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Happy Birthday Sawaiz 🎂</title>
+  <title>Happy Birthday Sawaiz</title>
   <style>
     body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(135deg, #3f2b96, #a8c0ff);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      color: white;
       text-align: center;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      background: #fef6f6;
     }
-
     h1 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
+      color: #d6336c;
+      font-size: 2.5rem;
+      margin-top: 20px;
     }
-
     .cake {
       position: relative;
-      width: 300px;
-      height: 150px;
-      background: radial-gradient(circle at center, #6a0dad, #4b0082);
-      border-radius: 50% / 20%;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding-top: 20px;
+      margin: 40px auto;
+      width: 250px;
+      height: 200px;
+      background: #4b2c82;
+      border-radius: 10px;
     }
-
-    .candle {
-      position: relative;
-      width: 6px;
-      height: 40px;
-      background: sienna;
-      margin: 0 5px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .flame {
+    .icing {
       position: absolute;
-      top: -12px;
-      width: 10px;
-      height: 15px;
-      background: radial-gradient(circle, gold, orange, red);
-      border-radius: 50%;
-      animation: flicker 0.2s infinite alternate;
-    }
-
-    @keyframes flicker {
-      from { transform: scale(1) translateY(0); opacity: 0.9; }
-      to   { transform: scale(1.2) translateY(-2px); opacity: 0.7; }
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    #confetti {
-      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
+      height: 60px;
+      background: #fff;
+      border-bottom-left-radius: 50% 30px;
+      border-bottom-right-radius: 50% 30px;
+    }
+    .candle {
+      position: absolute;
+      bottom: 60px;
+      width: 10px;
+      height: 40px;
+      background: red;
+      border-radius: 2px;
+    }
+    .flame {
+      width: 10px;
+      height: 15px;
+      background: orange;
+      border-radius: 50%;
+      margin: 0 auto;
+      animation: flicker 0.2s infinite alternate;
+    }
+    @keyframes flicker {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.2); opacity: 0.7; }
+    }
+    #message {
+      display: none;
+      font-size: 1.2rem;
+      margin-top: 20px;
+      color: #444;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
       pointer-events: none;
-      overflow: hidden;
-      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <h1 id="message">Sending you my love all the way Hyderabad to Lahore. Make a wish.</h1>
-  <div class="cake" id="cake"></div>
+  <h1>Happy Birthday, Sawaiz &lt;3</h1>
+
+  <div class="cake">
+    <div class="icing"></div>
+    <!-- 7 candles -->
+    <div class="candle" style="left:30px;"><div class="flame"></div></div>
+    <div class="candle" style="left:70px;"><div class="flame"></div></div>
+    <div class="candle" style="left:110px;"><div class="flame"></div></div>
+    <div class="candle" style="left:150px;"><div class="flame"></div></div>
+    <div class="candle" style="left:190px;"><div class="flame"></div></div>
+    <div class="candle" style="left:85px; bottom:100px;"><div class="flame"></div></div>
+    <div class="candle" style="left:135px; bottom:100px;"><div class="flame"></div></div>
+  </div>
+
+  <p id="message">Sending you my love from Hyderabad to Lahore. May your 27th be as sweet as this cake.</p>
+
   <canvas id="confetti"></canvas>
 
   <script>
-    const cake = document.getElementById("cake");
-    const message = document.getElementById("message");
-    const confettiCanvas = document.getElementById("confetti");
-    const ctx = confettiCanvas.getContext("2d");
+    // Microphone blowing detection
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const mic = audioContext.createMediaStreamSource(stream);
+      mic.connect(analyser);
+      const dataArray = new Uint8Array(analyser.fftSize);
 
-    let numCandles = 27; // 🎂 Change this number if needed
-    let flamesOut = 0;
-
-    // Add candles dynamically
-    for (let i = 0; i < numCandles; i++) {
-      const candle = document.createElement("div");
-      candle.classList.add("candle");
-
-      const flame = document.createElement("div");
-      flame.classList.add("flame");
-
-      candle.appendChild(flame);
-      cake.appendChild(candle);
-    }
-
-    // Microphone detection
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
-        const analyser = audioContext.createAnalyser();
-        source.connect(analyser);
-
-        const dataArray = new Uint8Array(analyser.fftSize);
-
-        function detectBlow() {
-          analyser.getByteFrequencyData(dataArray);
-          let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-          if (volume > 30) { // adjust sensitivity
-            blowOutCandle();
-          }
-
-          requestAnimationFrame(detectBlow);
+      function detectBlow() {
+        analyser.getByteTimeDomainData(dataArray);
+        let max = Math.max(...dataArray);
+        if (max > 180) { // Blow threshold
+          blowCandles();
         }
-
-        detectBlow();
-      });
-
-    function blowOutCandle() {
-      const flames = document.querySelectorAll(".flame:not(.hidden)");
-      if (flames.length > 0) {
-        flames[0].classList.add("hidden");
-        flamesOut++;
-
-        if (flamesOut === numCandles) {
-          showConfetti();
-          message.innerText = "May your 27th be as special as this cake <3";
-        }
+        requestAnimationFrame(detectBlow);
       }
+      detectBlow();
+    });
+
+    function blowCandles() {
+      document.querySelectorAll('.flame').forEach(f => f.style.display = 'none');
+      launchConfetti();
+      document.getElementById("message").style.display = "block";
     }
 
     // Simple confetti
-    confettiCanvas.width = window.innerWidth;
-    confettiCanvas.height = window.innerHeight;
-    let confettiPieces = [];
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const confetti = [];
 
-    function showConfetti() {
-      for (let i = 0; i < 200; i++) {
-        confettiPieces.push({
-          x: Math.random() * confettiCanvas.width,
-          y: Math.random() * confettiCanvas.height - confettiCanvas.height,
-          r: Math.random() * 6 + 4,
-          d: Math.random() * 20 + 10,
-          color: `hsl(${Math.random() * 360},100%,50%)`,
-          tilt: Math.random() * 10 - 10
-        });
-      }
-      drawConfetti();
+    function ConfettiPiece() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height - canvas.height;
+      this.size = Math.random() * 10 + 5;
+      this.speed = Math.random() * 3 + 2;
+      this.color = `hsl(${Math.random()*360},100%,50%)`;
     }
 
-    function drawConfetti() {
-      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-      confettiPieces.forEach(p => {
+    function launchConfetti() {
+      for (let i = 0; i < 200; i++) {
+        confetti.push(new ConfettiPiece());
+      }
+      renderConfetti();
+    }
+
+    function renderConfetti() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      confetti.forEach(c => {
         ctx.beginPath();
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.r, p.r);
+        ctx.arc(c.x, c.y, c.size, 0, Math.PI*2);
+        ctx.fillStyle = c.color;
         ctx.fill();
-        p.y += p.d * 0.05;
-        p.x += Math.sin(p.tilt);
-        if (p.y > confettiCanvas.height) {
-          p.y = -10;
-          p.x = Math.random() * confettiCanvas.width;
-        }
+        c.y += c.speed;
+        if (c.y > canvas.height) c.y = -10;
       });
-      requestAnimationFrame(drawConfetti);
+      requestAnimationFrame(renderConfetti);
     }
   </script>
 </body>
